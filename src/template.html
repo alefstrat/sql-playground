@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SQL Playground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="2.5" width="7" height="6" rx="1.6" fill="#2f5fe0"/><rect x="11.5" y="2.5" width="7" height="6" rx="1.6" fill="#c46a00"/><rect x="6.5" y="11.5" width="7" height="6" rx="1.6" fill="#0a7f6c"/><path d="M5 8.5v3.5h5M15 8.5v3.5h-5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+      <span>SQL Playground</span>
+    </div>
+    <span class="dbpill">shop_db · PostgreSQL</span>
+    <span class="sp"></span>
+    <button class="tbtn" id="tipsBtn" aria-expanded="false" aria-controls="tips">? Tips</button>
+    <div class="sizer" role="group" aria-label="Text size">
+      <button class="tbtn" id="fsDown" aria-label="Smaller text">A−</button>
+      <span id="fsVal" aria-live="polite">100%</span>
+      <button class="tbtn" id="fsUp" aria-label="Larger text">A+</button>
+    </div>
+    <button class="tbtn" id="contrastBtn" aria-pressed="false">High contrast</button>
+  </header>
+  <div class="tips" id="tips" hidden role="dialog" aria-label="Tips">
+    <h2>How to use SQL Playground</h2>
+    <ul>
+      <li><b>Click a table</b> in the diagram to query it (<code>SELECT *</code>). Click it again to take it out.</li>
+      <li><b>Click a column</b> to add it to <code>SELECT</code>. <b>Drag a column</b> onto a column of another table to <code>JOIN</code> them.</li>
+      <li><b>Double-click a table</b> (or press its <b>Rows</b> button) to see its rows under the diagram. Click a cell there to filter with <code>WHERE</code>.</li>
+      <li>Use <b>⋯</b> on a column to sort, group, total or calculate.</li>
+      <li><b>Click rows in the result</b> to write SQL that returns just those rows. <kbd>Shift</kbd> or <kbd class="modkey">Ctrl</kbd>-click picks several. <kbd>Esc</kbd> clears.</li>
+      <li><kbd class="modkey">Ctrl</kbd> + <kbd>Enter</kbd> runs. CREATE, INSERT, DELETE and DROP show a preview first. Separate statements with <b>;</b> to run a script.</li>
+      <li><kbd class="modkey">Ctrl</kbd> + scroll zooms the diagram. Drag empty space to move it.</li>
+    </ul>
+    <button class="tbtn" id="tipsClose">Close</button>
+  </div>
+  <main id="panes">
+    <aside id="schema" class="pane" aria-label="Schema diagram">
+      <div class="pane-head">
+        <h2>Schema</h2><span class="note" id="tcount">3 tables</span><span class="sp"></span>
+        <button class="hbtn" id="newTable" title="Start a CREATE TABLE statement with sample rows">+ Table</button>
+        <button class="hbtn" id="sdfit" title="Fit the diagram in view">Fit</button>
+        <button class="hbtn" id="sdauto" title="Re-arrange the tables automatically">Tidy</button>
+      </div>
+      <div id="schemaBody">
+        <div id="sdvp" aria-label="Diagram of tables and relationships">
+          <div id="sdworld"><svg id="sdlines" aria-hidden="true"></svg><div id="sdlabels"></div></div>
+          <div class="zoomctl" role="group" aria-label="Diagram zoom">
+            <button id="sdzout" aria-label="Zoom out">−</button><button class="zl" id="sdzl" aria-label="Reset zoom">100%</button><button id="sdzin" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="vgutter" id="drawerGutter" hidden title="Drag to resize"><span class="grip"></span></div>
+        <section id="drawer" hidden aria-label="Table rows"></section>
+      </div>
+    </aside>
+    <div class="gutter" data-g="l" title="Drag to resize · double-click to collapse"><span class="grip"></span></div>
+    <section id="center" class="pane" aria-label="Query result">
+      <div id="resultWrap" class="tbl-wrap" tabindex="-1"></div>
+      <div class="empty" id="empty" hidden></div>
+      <div class="cpill" id="previewPill" hidden>Preview · not applied yet</div>
+      <div class="cpill err" id="stale" hidden>The SQL has an error, so this is the last result that ran</div>
+    </section>
+    <div class="gutter" data-g="r" title="Drag to resize · double-click to collapse"><span class="grip"></span></div>
+    <aside id="code" class="pane" aria-label="SQL">
+      <div class="pane-head">
+        <h2>SQL</h2><span class="sp"></span>
+        <button class="hbtn" id="undo" title="Undo (query history)">↶ Undo</button>
+        <button class="hbtn" id="redo" title="Redo">↷ Redo</button>
+        <button class="hbtn" id="reset" title="Restore the starting query, data and layout">Reset demo</button>
+        <button class="runbtn" id="runBtn">▶ Run <kbd><span class="modkey">Ctrl</span>+Enter</kbd></button>
+      </div>
+      <div class="editor" id="editor">
+        <pre id="hlBack" aria-hidden="true"></pre><pre id="hlFlash" aria-hidden="true"></pre><pre id="hl" aria-hidden="true"></pre>
+        <textarea id="sql" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="SQL query"></textarea>
+      </div>
+      <div class="stmts" id="stmts" hidden></div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="changes" id="changes" hidden></div>
+    </aside>
+  </main>
+</div>
+<script>
+/*ENGINE*/
+</script>
+<script>
+/*LAYOUT*/
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>
